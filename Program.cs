@@ -27,6 +27,19 @@ namespace AuthSystem
 
             var app = builder.Build();
 
+
+            // Get a reference to the application's service provider
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<AuthDbContext>();
+
+                // Seed data
+                SeedData.Initialize(context);
+            }
+
+
+
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
