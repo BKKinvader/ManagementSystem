@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AuthSystem.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class FirstMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -28,8 +28,8 @@ namespace AuthSystem.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(100)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(100)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -156,6 +156,56 @@ namespace AuthSystem.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "LeaveBalances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    VacationDays = table.Column<int>(type: "int", nullable: false),
+                    SickDays = table.Column<int>(type: "int", nullable: false),
+                    SickKidsDays = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeaveBalances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LeaveBalances_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LeaveRequest",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    LeaveBalanceId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    LeaveType = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeaveRequest", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LeaveRequest_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_LeaveRequest_LeaveBalances_LeaveBalanceId",
+                        column: x => x.LeaveBalanceId,
+                        principalTable: "LeaveBalances",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -194,6 +244,21 @@ namespace AuthSystem.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveBalances_UserId",
+                table: "LeaveBalances",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveRequest_LeaveBalanceId",
+                table: "LeaveRequest",
+                column: "LeaveBalanceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveRequest_UserId",
+                table: "LeaveRequest",
+                column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -214,7 +279,13 @@ namespace AuthSystem.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "LeaveRequest");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "LeaveBalances");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using AuthSystem.Data;
+using AuthSystem.Models;
 
 namespace AuthSystem.Areas.Identity.Pages.Account
 {
@@ -30,13 +32,16 @@ namespace AuthSystem.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly AuthDbContext _context;// Inject your application's DbContext here
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            AuthDbContext context
+            )
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +49,7 @@ namespace AuthSystem.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
         /// <summary>
@@ -138,6 +144,18 @@ namespace AuthSystem.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+
+                    // Create a LeaveBalance for the new user
+                    var newUser = await _userManager.FindByEmailAsync(Input.Email);
+                    var leaveBalance = new LeaveBalance
+                    {
+                        UserId = newUser.Id,
+                        VacationDays = 25, // Set initial vacation days as needed
+                        SickDays = 5,     // Set initial sick days as needed
+                        SickKidsDays = 10, // Set initial sick kids days as needed
+                    };
+                    _context.LeaveBalances.Add(leaveBalance);
+                    await _context.SaveChangesAsync();
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
